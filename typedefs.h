@@ -93,3 +93,4 @@ typedef NTSTATUS(NTAPI* typeNtOpenProcess)(_Out_ PHANDLE ProcessHandle, _In_ ACC
 typedef NTSTATUS(NTAPI* typeNtAllocateVirtualMemory)(_In_ HANDLE ProcessHandle, _Inout_ PVOID* BaseAddress, _In_ ULONG_PTR ZeroBits, _Inout_ PSIZE_T RegionSize, _In_ ULONG AllocationType, _In_ ULONG Protect);
 typedef NTSTATUS(NTAPI* typeNtProtectVirtualMemory)(_In_ HANDLE ProcessHandle, _Inout_ PVOID* BaseAddress, _Inout_ PSIZE_T NumberOfBytesToProtect, ULONG NewAccessProtection, PULONG OldAccessPRotection);
 typedef NTSTATUS(NTAPI* typeNtWriteVirtualMemory)(_In_ HANDLE ProcessHandle, _In_ PVOID BaseAddress, _In_ PVOID Buffer, _In_ ULONG NumberOfBytesToWrite, _Out_ PULONG NumberOfBytesWritten OPTIONAL);
+typedef NTSTATUS(NTAPI* typeNtClose )( _In_ HANDLE Handle );

