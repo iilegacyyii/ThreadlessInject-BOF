@@ -1,0 +1,44 @@
+{
+    "name": "threadless-inject",
+    "version": "0.0.0",
+    "command_name": "threadless-inject",
+    "extension_author": "@0xLegacyy",
+    "original_author": "@0xLegacyy",
+    "repo_url": "https://github.com/iiLegacyyii/ThreadlessInject-BOF",
+    "help": "Execute shellcode within a remote process via hooking function calls.",
+    "depends_on": "coff-loader",
+    "entrypoint": "go",
+    "files": [
+        {
+            "os": "windows",
+            "arch": "amd64",
+            "path": "threadless-inject.o"
+        }
+    ],
+    "arguments": [
+        {
+            "name": "pid",
+            "desc": "The PID of the process you want to dump.",
+            "type": "int",
+            "optional": false
+        },
+        {
+            "name": "dll-name",
+            "desc": "The name of the dll containing the exported function to hook.",
+            "type": "string",
+            "optional": false
+        },
+        {
+            "name": "function-name",
+            "desc": "The name of the function you would like to hook.",
+            "type": "string",
+            "optional": false
+        },
+        {
+            "name": "shellcode-path",
+            "desc": "Path to file containing shellcode.",
+            "type": "string",
+            "optional": false
+        }
+    ]
+}

