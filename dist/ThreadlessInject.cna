@@ -14,7 +14,7 @@ alias threadless-inject {
         return;
     }
 
-    local("$barch $handle $data $args $pid $dll $functionName $shellcodeFile")
+    local('$barch $handle $data $args $pid $dll $functionName $shellcodeFile') # https://github.com/iilegacyyii/ThreadlessInject-BOF/issues/4
 
     # Check we are in x64 beacon
     $barch = barch($1);
@@ -55,7 +55,7 @@ alias threadless-inject {
 
     # Read shellcode from bin
     # Snippet taken from: https://github.com/ScriptIdiot/sw2-secinject/blob/main/dist/sw2-secinject.cna
-    local("$sc_handle $sc_data");
+    local('$sc_handle $sc_data'); # https://github.com/iilegacyyii/ThreadlessInject-BOF/issues/4
     $sc_handle = openf($shellcodeFile);
     $sc_data = readb($sc_handle, -1);
     closef($sc_handle);
