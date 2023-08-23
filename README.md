@@ -4,8 +4,6 @@ A beacon object file implementation of [ThreadlessInject](https://github.com/CCo
 
 ThreadlessInject is a novel process injection technique involving hooking an export function from a remote process in order to gain shellcode execution. The original project was released after their talk at BSides Cymru 2023.
 
-_Note: I made this project in order to learn how to write BOF's, so this hasn't been thoroughly tested._
-
 ## Usage
 
 ```
