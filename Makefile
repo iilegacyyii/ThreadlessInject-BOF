@@ -6,4 +6,4 @@ all:
 	$(CC_x64) -o dist/$(BOFNAME).o -c entry.c
 
 clean:
-	rm -f disk/$(BOFNAME).o
+	rm -f dist/$(BOFNAME).o
