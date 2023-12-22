@@ -12,7 +12,7 @@
         {
             "os": "windows",
             "arch": "amd64",
-            "path": "threadless-inject.o"
+            "path": "dist/threadless-inject.o"
         }
     ],
     "arguments": [
@@ -37,7 +37,7 @@
         {
             "name": "shellcode-path",
             "desc": "Path to file containing shellcode.",
-            "type": "string",
+            "type": "file",
             "optional": false
         }
     ]
